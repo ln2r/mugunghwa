@@ -34,7 +34,12 @@ async fn fetch(
             .filter(|repo| repo["visibility"] == "public" && repo["full_name"] != "ln2r/ln2r")
             .collect();
 
-        Response::from_json(&public)
+        let mut response = Response::from_json(&public)?;
+        response.headers_mut().set("Access-Control-Allow-Origin", "*")?;
+        response.headers_mut().set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
+        response.headers_mut().set("Access-Control-Allow-Headers", "*")?;
+        
+        Ok(response)
     })
         .run(req, env)
         .await
