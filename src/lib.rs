@@ -1,19 +1,4 @@
-use serde::{Deserialize, Serialize};
 use worker::*;
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Work {
-    id: String,
-    name: String,
-    full_name: String,
-    html_url: String,
-    description: String,
-    fork: String,
-    topics: Vec<String>,
-    archived: String,
-    created_at: String,
-    updated_at: String,
-}
 
 #[event(fetch)]
 async fn fetch(
@@ -23,7 +8,7 @@ async fn fetch(
 ) -> Result<Response> {
     let router = Router::new();
 
-    router.get_async("/works",| req, ctx | async move {
+    router.get_async("/works",| _req, _ctx | async move {
         let url = "https://api.github.com/users/ln2r/repos";
 
         // request initialization
@@ -31,7 +16,7 @@ async fn fetch(
         init.with_method(Method::Get);
 
         // setting headers
-        let mut headers = Headers::new();
+        let headers = Headers::new();
         headers.set("Accept", "application/vnd.github.v3+json")?;
         headers.set("User-Agent", "mugunghwa-cfw")?;
         init.with_headers(headers);
@@ -46,7 +31,7 @@ async fn fetch(
             .as_array()
             .unwrap_or(&empty)
             .iter()
-            .filter(|repo| repo["visibility"] == "public")
+            .filter(|repo| repo["visibility"] == "public" && repo["full_name"] != "ln2r/ln2r")
             .collect();
 
         Response::from_json(&public)
