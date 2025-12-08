@@ -32,5 +32,3 @@ pub async fn get_works() -> Result<Response, worker::Error> {
 
     Result::Ok(response)
 }
-
-pub async fn add_work() -> Result<Response, worker::Error> {}
