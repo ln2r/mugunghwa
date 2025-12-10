@@ -1,4 +1,4 @@
-use worker::{Request, Response, RouteContext, Result, console_log};
+use worker::{Request, Response, RouteContext, Result};
 
 pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
     let request_key = req.headers().get("x-mugunghwa-key")?.unwrap_or_default();
