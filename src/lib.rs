@@ -38,7 +38,7 @@ async fn fetch(
 
             let body = req.json().await?;
 
-            return Ok(add_writings(body).await.expect("Body required"));
+            return Ok(add_writings(body, &ctx).await.expect("Body required"));
         })
         .run(req, env)
         .await
