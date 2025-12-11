@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
-use worker::{console_log, Response, RouteContext};
+use worker::{console_log, Date, Response, RouteContext};
 use worker::wasm_bindgen::JsValue;
+use crate::commons::generate_snowflake;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Writing {
@@ -30,17 +31,16 @@ pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Respo
     console_log!("{:?}", body);
     let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
 
-    // FIXME: change to snowflake/uuid
-    let id = '1';
+    let id = generate_snowflake(ctx);
+    let now = Date::now();
 
     d1.prepare("INSERT INTO writings (id, title, body, created, updated) VALUES (?, ?, ?, ?, ?);")
         .bind(&[
             JsValue::from(&id.to_string()),
             JsValue::from(&body.title.to_string()),
             JsValue::from(&body.body.to_string()),
-            // FIXME: actually send the time
-            JsValue::from(&body.body.to_string()),
-            JsValue::from(&body.body.to_string()),
+            JsValue::from(now.to_string()),
+            JsValue::from(now.to_string()),
         ])?
         .run()
         .await?;
