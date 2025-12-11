@@ -6,6 +6,7 @@ compatibility_date = "2025-10-08"
 command = "cargo install -q worker-build && worker-build --release"
 
 [vars]
+name = ""
 github_key = ""
 api_key = ""
 db_name = ""
