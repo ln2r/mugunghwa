@@ -1,4 +1,5 @@
 use worker::{Request, Response, RouteContext, Result};
+use worker::js_sys::Date;
 
 pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
     let request_key = req.headers().get("x-mugunghwa-key")?.unwrap_or_default();
@@ -9,4 +10,31 @@ pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Respons
     }
 
     Ok(None)
+}
+
+pub fn generate_snowflake(ctx: &RouteContext<()>) -> u64 {
+    let epoch = 1735689600000u64;
+    let now = Date::now() as u64;
+    let machine_name = match ctx.env.var("name") {
+        Ok(secret) => secret.to_string(),
+        Err(_) => "default".to_string(),
+    };
+    let machine_id = fnv1a_hash64(&machine_name) & 0x3FF;
+    // hardcoded to decrease the complexity
+    let sequence = 0;
+
+    // this is actually returning value and treated as so when there's no semicolon
+    ((now - epoch) << 22) | (machine_id << 12) | sequence
+}
+
+fn fnv1a_hash64(input: &str) -> u64 {
+    let mut hash: u64 = 0xcbf29ce484222325;       // FNV offset basis (64-bit)
+    let prime: u64 = 0x100000001b3;               // FNV prime (64-bit)
+
+    for byte in input.as_bytes() {
+        hash ^= *byte as u64;                    // XOR with the byte
+        hash = hash.wrapping_mul(prime);         // multiply with overflow allowed
+    }
+
+    hash
 }
