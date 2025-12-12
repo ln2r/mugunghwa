@@ -5,7 +5,7 @@ mod commons;
 use worker::*;
 use crate::commons::check_key;
 use crate::works::get_works;
-use crate::writings::{add_writings, get_writing, get_writings};
+use crate::writings::{add_writings, get_writing, get_writings, update_writing};
 
 #[event(fetch)]
 async fn fetch(
@@ -39,6 +39,15 @@ async fn fetch(
             let body = req.json().await?;
 
             return Ok(add_writings(body, &ctx).await.expect("Body required"));
+        })
+        .patch_async("/writing", |mut req, ctx | async move {
+            if let Some(resp) = check_key(&req, &ctx)? {
+                return Ok(resp);
+            }
+
+            let body = req.json().await?;
+
+            return Ok(update_writing(body, &ctx).await.expect("Body required"));
         })
         .run(req, env)
         .await
