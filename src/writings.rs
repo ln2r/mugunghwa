@@ -5,12 +5,12 @@ use crate::commons::generate_snowflake;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Writing {
-    id: String,
-    title: String,
-    body: String,
-    created: String,
-    updated: String,
-    deleted: String,
+    pub id: String,
+    pub title: String,
+    pub body: String,
+    pub created: String,
+    pub updated: String,
+    pub deleted: Option<String>,
 }
 
 pub async fn get_writings() -> Result<Response, worker::Error> {
@@ -28,7 +28,6 @@ pub async fn get_writing(id: String) -> Result<Response, worker::Error> {
 }
 
 pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    console_log!("{:?}", body);
     let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
 
     let id = generate_snowflake(ctx);
@@ -45,7 +44,38 @@ pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Respo
         .run()
         .await?;
 
-    return Result::Ok(Response::ok(
-        "OK"
-    )?)
+    let res = d1.prepare("SELECT * FROM writings WHERE id = ?;")
+        .bind(&[
+            JsValue::from(&id.to_string()),
+        ])?
+        .first::<Writing>(None)
+        .await?;
+
+    Result::Ok(Response::from_json(&res)?)
+}
+
+pub async fn update_writing(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
+    console_log!("{:?}", body);
+    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+
+    let now = Date::now();
+
+    d1.prepare("UPDATE writings SET title = ?, body = ?, updated = ? WHERE id = ?;")
+        .bind(&[
+            JsValue::from(&body.title.to_string()),
+            JsValue::from(&body.body.to_string()),
+            JsValue::from(now.to_string()),
+            JsValue::from(&body.id.to_string()),
+        ])?
+        .run()
+        .await?;
+
+    let res = d1.prepare("SELECT * FROM writings WHERE id = ?;")
+        .bind(&[
+            JsValue::from(&body.id.to_string()),
+        ])?
+        .first::<Writing>(None)
+        .await?;
+
+    Result::Ok(Response::from_json(&res)?)
 }
