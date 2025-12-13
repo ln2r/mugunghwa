@@ -22,7 +22,7 @@ async fn fetch(
         .get_async("/writings",| _req, ctx | async move {
             get_writings(&ctx).await
         })
-        .get_async("/writing/:id",| req, ctx | async move {
+        .get_async("/writing/:id",| _req, ctx | async move {
             let id = ctx.param("id").unwrap().to_string();
 
             return Ok(get_writing(id, &ctx).await.expect("Id required"));

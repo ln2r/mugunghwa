@@ -1,15 +1,17 @@
 use serde::{Deserialize, Serialize};
-use worker::{console_log, Date, Response, RouteContext};
+use worker::{Response, RouteContext};
 use worker::wasm_bindgen::JsValue;
-use crate::commons::generate_snowflake;
+use crate::commons::{generate_slug, generate_snowflake};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Writing {
-    pub id: String,
+    pub id: Option<String>,
     pub title: String,
+    pub slug: Option<String>,
+    pub hero: Option<String>,
     pub body: String,
-    pub created: String,
-    pub updated: String,
+    pub created: Option<String>,
+    pub updated: Option<String>,
     pub deleted: Option<String>,
 }
 
@@ -28,7 +30,7 @@ pub async fn get_writings(ctx: &RouteContext<()>) -> Result<Response, worker::Er
 pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
     let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
 
-    let res = d1.prepare("SELECT * FROM writings WHERE id = ? AND deleted IS NULL;")
+    let res = d1.prepare("SELECT * FROM writings WHERE id = ? AND deleted is NULL;")
         .bind(&[
             JsValue::from(&id.to_string()),
         ])?
@@ -42,11 +44,18 @@ pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Respo
     let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
 
     let id = generate_snowflake(ctx);
+    let slug = generate_slug(&body.title);
+    let hero = body.hero.clone();
 
-    d1.prepare("INSERT INTO writings (id, title, body, created, updated) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'), strftime('%Y-%m-%dT%H:%M:%fZ','now'));")
+    d1.prepare("INSERT INTO writings (id, title, slug, hero, body, created, updated) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'), strftime('%Y-%m-%dT%H:%M:%fZ','now'));")
         .bind(&[
             JsValue::from(&id.to_string()),
             JsValue::from(&body.title.to_string()),
+            JsValue::from(&slug.to_string()),
+            match hero {
+                Some(ref s) => JsValue::from(s), // handling null
+                None => JsValue::NULL,
+            },
             JsValue::from(&body.body.to_string()),
         ])?
         .run()
@@ -63,23 +72,23 @@ pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Respo
 }
 
 pub async fn update_writing(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    console_log!("{:?}", body);
     let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+    let id = body.id.clone().expect("Id required");
+    let slug = generate_slug(&body.title);
 
-    let now = Date::now();
-
-    d1.prepare("UPDATE writings SET title = ?, body = ?, updated = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?;")
+    d1.prepare("UPDATE writings SET title = ?, slug = ?, body = ?, updated = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?;")
         .bind(&[
             JsValue::from(&body.title.to_string()),
+            JsValue::from(&slug.to_string()),
             JsValue::from(&body.body.to_string()),
-            JsValue::from(&body.id.to_string()),
+            JsValue::from(&id.to_string()),
         ])?
         .run()
         .await?;
 
     let res = d1.prepare("SELECT * FROM writings WHERE id = ?;")
         .bind(&[
-            JsValue::from(&body.id.to_string()),
+            JsValue::from(&id.to_string()),
         ])?
         .first::<Writing>(None)
         .await?;

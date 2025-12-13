@@ -1,5 +1,14 @@
+use regex::Regex;
 use worker::{Request, Response, RouteContext, Result};
 use worker::js_sys::Date;
+use once_cell::sync::Lazy;
+
+static NON_WORD: Lazy<Regex> = Lazy::new(|| { 
+    Regex::new(r"\W").unwrap() 
+});
+static CLEANUP: Lazy<Regex> = Lazy::new(|| { 
+    Regex::new(r"-+").unwrap()
+});
 
 pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
     let request_key = req.headers().get("x-mugunghwa-key")?.unwrap_or_default();
@@ -10,6 +19,12 @@ pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Respons
     }
 
     Ok(None)
+}
+
+pub fn generate_slug(title: &String) -> String {
+    let initial = NON_WORD.replace_all(title, "-");
+
+    CLEANUP.replace_all(&initial, "-").into_owned()
 }
 
 pub fn generate_snowflake(ctx: &RouteContext<()>) -> u64 {
