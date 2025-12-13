@@ -23,10 +23,6 @@ async fn fetch(
             get_writings(&ctx).await
         })
         .get_async("/writing/:id",| req, ctx | async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
-                return Ok(resp);
-            }
-
             let id = ctx.param("id").unwrap().to_string();
 
             return Ok(get_writing(id, &ctx).await.expect("Id required"));
