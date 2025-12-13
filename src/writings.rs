@@ -40,6 +40,19 @@ pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response,
     Result::Ok(Response::from_json(&res)?)
 }
 
+pub async fn get_writing_by_slug(slug: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
+    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+
+    let res = d1.prepare("SELECT * FROM writings WHERE slug = ? AND deleted is NULL;")
+        .bind(&[
+            JsValue::from(&slug.to_string()),
+        ])?
+        .first::<Writing>(None)
+        .await?;
+
+    Result::Ok(Response::from_json(&res)?)
+}
+
 pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
     let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
 
