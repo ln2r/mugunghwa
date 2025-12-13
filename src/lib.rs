@@ -19,8 +19,8 @@ async fn fetch(
         get_works().await
     })
         // Writing Endpoints
-        .get_async("/writings",| _req, _ctx | async move {
-            get_writings().await
+        .get_async("/writings",| _req, ctx | async move {
+            get_writings(&ctx).await
         })
         .get_async("/writing/:id",| req, ctx | async move {
             if let Some(resp) = check_key(&req, &ctx)? {
@@ -29,7 +29,7 @@ async fn fetch(
 
             let id = ctx.param("id").unwrap().to_string();
 
-            return Ok(get_writing(id).await.expect("Id required"));
+            return Ok(get_writing(id, &ctx).await.expect("Id required"));
         })
         .post_async("/writing", |mut req, ctx | async move {
             if let Some(resp) = check_key(&req, &ctx)? {
