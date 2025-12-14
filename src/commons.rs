@@ -10,6 +10,9 @@ static CLEANUP: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"-+").unwrap()
 });
 
+pub static STRIP_IMAGE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"!\[\w+\s\w+].+(\.png|jpeg|jpg|gif|webp)\)\s").unwrap());
+
 pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
     let request_key = req.headers().get("x-mugunghwa-key")?.unwrap_or_default();
     let key = ctx.env.var("api_key")?.to_string();

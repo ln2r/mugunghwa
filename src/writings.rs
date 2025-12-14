@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use worker::{Response, RouteContext};
 use worker::wasm_bindgen::JsValue;
-use crate::commons::{generate_slug, generate_snowflake};
+use crate::commons::{generate_slug, generate_snowflake, STRIP_IMAGE};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Writing {
@@ -23,8 +23,16 @@ pub async fn get_writings(ctx: &RouteContext<()>) -> Result<Response, worker::Er
         .await?;
 
     let writings: Vec<Writing> = res.results()?;
+    let formatted: Vec<Writing> = writings.into_iter().map(|w| {
+        let sanitized = STRIP_IMAGE.replace_all(&w.body, "");
 
-    Result::Ok(Response::from_json(&writings)?)
+        Writing {
+            body: sanitized.chars().take(150).collect::<String>(),
+            ..w
+        }
+    }).collect();
+
+    Result::Ok(Response::from_json(&formatted)?)
 }
 
 pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
