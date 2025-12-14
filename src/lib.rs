@@ -3,7 +3,7 @@ mod writings;
 mod commons;
 
 use worker::*;
-use crate::commons::check_key;
+use crate::commons::{check_key, handle_preflight};
 use crate::works::get_works;
 use crate::writings::{add_writings, get_writing, get_writing_by_slug, get_writings, update_writing};
 
@@ -15,9 +15,11 @@ async fn fetch(
 ) -> Result<Response> {
     let router = Router::new();
 
-    router.get_async("/works",| _req, _ctx | async move {
-        get_works().await
-    })
+    router
+        .options("/*any", |_req, _ctx| handle_preflight())
+        .get_async("/works",| _req, _ctx | async move {
+            get_works().await
+        })
         // Writing Endpoints
         .get_async("/writings",| _req, ctx | async move {
             get_writings(&ctx).await

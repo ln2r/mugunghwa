@@ -30,6 +30,17 @@ pub fn generate_slug(title: &String) -> String {
     CLEANUP.replace_all(&initial, "-").into_owned()
 }
 
+pub fn handle_preflight() -> Result<Response> {
+    let mut res = Response::empty()?;
+    let headers = res.headers_mut();
+
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
+    headers.set("Access-Control-Allow-Headers", "*")?;
+    
+    Ok(res)
+}
+
 pub fn generate_snowflake(ctx: &RouteContext<()>) -> u64 {
     let epoch = 1735689600000u64;
     let now = Date::now() as u64;

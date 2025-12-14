@@ -25,10 +25,5 @@ pub async fn get_works() -> Result<Response, worker::Error> {
         .filter(|repo| repo["visibility"] == "public" && repo["full_name"] != "ln2r/ln2r")
         .collect();
 
-    let mut response = Response::from_json(&public)?;
-    response.headers_mut().set("Access-Control-Allow-Origin", "*")?;
-    response.headers_mut().set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
-    response.headers_mut().set("Access-Control-Allow-Headers", "*")?;
-
-    Result::Ok(response)
+    Result::Ok(Response::from_json(&public)?)
 }
