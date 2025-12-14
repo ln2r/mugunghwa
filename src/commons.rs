@@ -30,8 +30,8 @@ pub fn generate_slug(title: &String) -> String {
     CLEANUP.replace_all(&initial, "-").into_owned()
 }
 
-pub fn handle_preflight() -> Result<Response> {
-    let mut res = Response::empty()?;
+pub fn return_response(res: Result<Response>) -> Result<Response> {
+    let mut res = res?;
     let headers = res.headers_mut();
 
     headers.set("Access-Control-Allow-Origin", "*")?;
