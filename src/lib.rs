@@ -17,7 +17,7 @@ async fn fetch(
 
     router
         .get_async("/works",| _req, _ctx | async move {
-            get_works().await
+            return_response(get_works().await)
         })
         // Writing Endpoints
         .get_async("/writings",| _req, ctx | async move {
