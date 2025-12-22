@@ -9,7 +9,8 @@ command = "cargo install -q worker-build && worker-build --release"
 name = ""
 github_key = ""
 api_key = ""
-db_name = ""
+db_binding = ""
+bucket_binding = ""
 
 [[d1_databases]]
 binding = ""
