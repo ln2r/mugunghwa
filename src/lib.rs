@@ -1,9 +1,11 @@
 mod works;
 mod writings;
 mod commons;
+mod utils;
 
 use worker::*;
 use crate::commons::{check_key, return_response};
+use crate::utils::{get_file, upload_file, FileUpload};
 use crate::works::get_works;
 use crate::writings::{add_writings, get_writing, get_writing_by_slug, get_writings, update_writing};
 
@@ -50,6 +52,27 @@ async fn fetch(
             let body = req.json().await?;
 
             return_response(Ok(update_writing(body, &ctx).await.expect("Body required")))
+        })
+        .post_async("/utils/upload", |mut req, ctx | async move {
+            if let Some(resp) = check_key(&req, &ctx)? {
+                return Ok(resp);
+            }
+
+            let form = req.form_data().await?;
+            let file = match form.get("file") {
+                Some(FormEntry::File(file)) => file, _ => {
+                return Response::error(" file required", 400)
+                }
+            };
+
+            let payload = FileUpload::from_file(file).await?;
+            
+            return_response(Ok(upload_file(payload, &ctx).await.expect("REASON")))
+        })
+        .get_async("/utils/file/:key", | _req, ctx | async move{
+            let key = ctx.param("key").unwrap().to_string();
+
+            return_response(Ok(get_file(key,&ctx).await.expect("key required")))
         })
         .run(req, env)
         .await
