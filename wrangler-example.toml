@@ -15,3 +15,7 @@ db_name = ""
 binding = ""
 database_name = ""
 database_id = ""
+
+[[r2_buckets]]
+bucket_name = ""
+binding = ""
