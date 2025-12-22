@@ -16,7 +16,7 @@ pub struct Writing {
 }
 
 pub async fn get_writings(ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+    let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
 
     let res = d1.prepare("SELECT * FROM writings WHERE deleted IS NULL;")
         .all()
@@ -36,7 +36,7 @@ pub async fn get_writings(ctx: &RouteContext<()>) -> Result<Response, worker::Er
 }
 
 pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+    let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
 
     let res = d1.prepare("SELECT * FROM writings WHERE id = ? AND deleted is NULL;")
         .bind(&[
@@ -49,7 +49,7 @@ pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response,
 }
 
 pub async fn get_writing_by_slug(slug: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+    let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
 
     let res = d1.prepare("SELECT * FROM writings WHERE slug = ? AND deleted is NULL;")
         .bind(&[
@@ -62,7 +62,7 @@ pub async fn get_writing_by_slug(slug: String, ctx: &RouteContext<()>) -> Result
 }
 
 pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+    let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
 
     let id = generate_snowflake(ctx);
     let slug = generate_slug(&body.title);
@@ -93,7 +93,7 @@ pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Respo
 }
 
 pub async fn update_writing(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
-    let d1 = ctx.env.d1(&ctx.env.var("db_name")?.to_string())?;
+    let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
     let id = body.id.clone().expect("Id required");
     let slug = generate_slug(&body.title);
 
