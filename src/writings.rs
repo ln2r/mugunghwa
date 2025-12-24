@@ -32,7 +32,7 @@ pub async fn get_writings(ctx: &RouteContext<()>) -> Result<Response, worker::Er
         }
     }).collect();
 
-    Result::Ok(Response::from_json(&formatted)?)
+    Response::from_json(&formatted)
 }
 
 pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
@@ -45,7 +45,7 @@ pub async fn get_writing(id: String, ctx: &RouteContext<()>) -> Result<Response,
         .first::<Writing>(None)
         .await?;
 
-    Result::Ok(Response::from_json(&res)?)
+    Response::from_json(&res)
 }
 
 pub async fn get_writing_by_slug(slug: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
@@ -58,7 +58,7 @@ pub async fn get_writing_by_slug(slug: String, ctx: &RouteContext<()>) -> Result
         .first::<Writing>(None)
         .await?;
 
-    Result::Ok(Response::from_json(&res)?)
+    Response::from_json(&res)
 }
 
 pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
@@ -89,7 +89,7 @@ pub async fn add_writings(body: Writing, ctx: &RouteContext<()>) -> Result<Respo
         .first::<Writing>(None)
         .await?;
 
-    Result::Ok(Response::from_json(&res)?)
+    Response::from_json(&res)
 }
 
 pub async fn update_writing(body: Writing, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
@@ -114,5 +114,5 @@ pub async fn update_writing(body: Writing, ctx: &RouteContext<()>) -> Result<Res
         .first::<Writing>(None)
         .await?;
 
-    Result::Ok(Response::from_json(&res)?)
+    Response::from_json(&res)
 }

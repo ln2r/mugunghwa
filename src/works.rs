@@ -25,5 +25,5 @@ pub async fn get_works() -> Result<Response, worker::Error> {
         .filter(|repo| repo["visibility"] == "public" && repo["full_name"] != "ln2r/ln2r")
         .collect();
 
-    Result::Ok(Response::from_json(&public)?)
+    Response::from_json(&public)
 }

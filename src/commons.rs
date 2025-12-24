@@ -3,10 +3,10 @@ use worker::{Request, Response, RouteContext, Result};
 use worker::js_sys::Date;
 use once_cell::sync::Lazy;
 
-static NON_WORD: Lazy<Regex> = Lazy::new(|| { 
-    Regex::new(r"\W").unwrap() 
+static NON_WORD: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"\W").unwrap()
 });
-static CLEANUP: Lazy<Regex> = Lazy::new(|| { 
+static CLEANUP: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"-+").unwrap()
 });
 
@@ -24,7 +24,7 @@ pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Respons
     Ok(None)
 }
 
-pub fn generate_slug(title: &String) -> String {
+pub fn generate_slug(title: &str) -> String {
     let initial = NON_WORD.replace_all(title, "-");
 
     CLEANUP.replace_all(&initial, "-").into_owned()
@@ -37,7 +37,7 @@ pub fn return_response(res: Result<Response>) -> Result<Response> {
     headers.set("Access-Control-Allow-Origin", "*")?;
     headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
     headers.set("Access-Control-Allow-Headers", "*")?;
-    
+
     Ok(res)
 }
 

@@ -32,7 +32,7 @@ pub async fn upload_file(payload: FileUpload, ctx: &RouteContext<()>) -> Result<
         "path": base.to_owned() + &*key,
     });
 
-    Result::Ok(Response::from_json(&res)?)
+    Response::from_json(&res)
 }
 
 pub async fn get_file(key: String, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
