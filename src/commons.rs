@@ -1,14 +1,10 @@
-use regex::Regex;
-use worker::{Request, Response, RouteContext, Result};
-use worker::js_sys::Date;
 use once_cell::sync::Lazy;
+use regex::Regex;
+use worker::js_sys::Date;
+use worker::{Request, Response, Result, RouteContext};
 
-static NON_WORD: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\W").unwrap()
-});
-static CLEANUP: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"-+").unwrap()
-});
+static NON_WORD: Lazy<Regex> = Lazy::new(|| Regex::new(r"\W").unwrap());
+static CLEANUP: Lazy<Regex> = Lazy::new(|| Regex::new(r"-+").unwrap());
 
 pub static STRIP_IMAGE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"!\[\w+\s\w+].+(\.png|jpeg|jpg|gif|webp)\)\s").unwrap());
@@ -35,8 +31,11 @@ pub fn return_response(res: Result<Response>) -> Result<Response> {
     let headers = res.headers_mut();
 
     headers.set("Access-Control-Allow-Origin", "*")?;
-    headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
-    headers.set("Access-Control-Allow-Headers", "*")?;
+    headers.set("Access-Control-Allow-Methods", "GET, OPTIONS, POST, PATCH")?;
+    headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, x-mugunghwa-key",
+    )?;
 
     Ok(res)
 }
@@ -57,12 +56,12 @@ pub fn generate_snowflake(ctx: &RouteContext<()>) -> u64 {
 }
 
 fn fnv1a_hash64(input: &str) -> u64 {
-    let mut hash: u64 = 0xcbf29ce484222325;       // FNV offset basis (64-bit)
-    let prime: u64 = 0x100000001b3;               // FNV prime (64-bit)
+    let mut hash: u64 = 0xcbf29ce484222325; // FNV offset basis (64-bit)
+    let prime: u64 = 0x100000001b3; // FNV prime (64-bit)
 
     for byte in input.as_bytes() {
-        hash ^= *byte as u64;                    // XOR with the byte
-        hash = hash.wrapping_mul(prime);         // multiply with overflow allowed
+        hash ^= *byte as u64; // XOR with the byte
+        hash = hash.wrapping_mul(prime); // multiply with overflow allowed
     }
 
     hash
