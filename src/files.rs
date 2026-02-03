@@ -89,12 +89,21 @@ pub async fn get_file(key: String, ctx: &RouteContext<()>) -> Result<Response, w
     Ok(res)
 }
 
-pub async fn get_files(ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
+pub async fn get_files(
+    ctx: &RouteContext<()>,
+    search: Option<String>,
+) -> Result<Response, worker::Error> {
     let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
-    let res = d1
-        .prepare("SELECT * FROM files WHERE deleted IS NULL;")
-        .all()
-        .await?;
+    let res = if let Some(q) = search {
+        d1.prepare("SELECT * FROM files WHERE key LIKE ? AND deleted IS NULL;")
+            .bind(&[format!("%{}%", q).into()])?
+            .all()
+            .await?
+    } else {
+        d1.prepare("SELECT * FROM files WHERE deleted IS NULL;")
+            .all()
+            .await?
+    };
 
     let files: Vec<File> = res.results()?;
     let formatted: Vec<File> = files.into_iter().map(|f| File { ..f }).collect();

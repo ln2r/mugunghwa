@@ -3,6 +3,8 @@ mod files;
 mod works;
 mod writings;
 
+use std::collections::HashMap;
+
 use crate::commons::{check_key, return_response};
 use crate::files::{get_file, get_files, upload_file, FileUpload};
 use crate::works::get_works;
@@ -78,7 +80,10 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 return Ok(resp);
             }
 
-            return_response(get_files(&ctx).await)
+            let params: HashMap<_, _> = req.url()?.query_pairs().into_owned().collect();
+            let search = params.get("search").cloned();
+
+            return_response(get_files(&ctx, search).await)
         })
         .options_async("/writing", |_req, _ctx| async move {
             return_response(Ok(Response::empty()?))
