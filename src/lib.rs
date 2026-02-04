@@ -76,10 +76,6 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(Ok(get_file(key, &ctx).await.expect("key required")))
         })
         .get_async("/utils/files", |req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
-                return Ok(resp);
-            }
-
             let params: HashMap<_, _> = req.url()?.query_pairs().into_owned().collect();
             let search = params.get("search").cloned();
 
