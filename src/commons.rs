@@ -1,10 +1,16 @@
+use base64::prelude::BASE64_URL_SAFE_NO_PAD;
+use base64::Engine;
+use hmac::{Hmac, Mac};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use sha2::Sha256;
 use worker::js_sys::Date;
 use worker::{Request, Response, Result, RouteContext};
 
 static NON_WORD: Lazy<Regex> = Lazy::new(|| Regex::new(r"\W").unwrap());
 static CLEANUP: Lazy<Regex> = Lazy::new(|| Regex::new(r"-+").unwrap());
+
+type HmacSha256 = Hmac<Sha256>;
 
 pub static STRIP_IMAGE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"!\[\w+\s\w+].+(\.png|jpeg|jpg|gif|webp)\)\s").unwrap());
@@ -38,6 +44,18 @@ pub fn return_response(res: Result<Response>) -> Result<Response> {
     )?;
 
     Ok(res)
+}
+
+pub fn b64(data: &[u8]) -> String {
+    BASE64_URL_SAFE_NO_PAD.encode(data)
+}
+
+pub fn sign_hs256(secret: &[u8], message: &[u8]) -> Vec<u8> {
+    let mut mac = <HmacSha256 as Mac>::new_from_slice(secret).expect("Key");
+
+    mac.update(message);
+
+    mac.finalize().into_bytes().to_vec()
 }
 
 pub fn generate_snowflake(ctx: &RouteContext<()>) -> u64 {
