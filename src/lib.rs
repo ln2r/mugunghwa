@@ -1,10 +1,13 @@
+mod auth;
 mod commons;
 mod files;
+mod rng;
 mod works;
 mod writings;
 
 use std::collections::HashMap;
 
+use crate::auth::{login, logout, register};
 use crate::commons::{check_key, return_response};
 use crate::files::{get_file, get_files, upload_file, FileUpload};
 use crate::works::get_works;
@@ -55,6 +58,9 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
             return_response(Ok(update_writing(body, &ctx).await.expect("Body required")))
         })
+        .options_async("/writing", |_req, _ctx| async move {
+            return_response(Ok(Response::empty()?))
+        })
         .post_async("/utils/upload", |mut req, ctx| async move {
             if let Some(resp) = check_key(&req, &ctx)? {
                 return Ok(resp);
@@ -81,8 +87,32 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
             return_response(get_files(&ctx, search).await)
         })
-        .options_async("/writing", |_req, _ctx| async move {
-            return_response(Ok(Response::empty()?))
+        .post_async("/auth/register", |mut req, ctx| async move {
+            if let Some(resp) = check_key(&req, &ctx)? {
+                return Ok(resp);
+            }
+
+            let body = req.json().await?;
+
+            return_response(Ok(register(body, &ctx).await.expect("Body required")))
+        })
+        .post_async("/auth/login", |mut req, ctx| async move {
+            if let Some(resp) = check_key(&req, &ctx)? {
+                return Ok(resp);
+            }
+
+            let body = req.json().await?;
+
+            return_response(Ok(login(body, &ctx).await.expect("Body required")))
+        })
+        .post_async("/auth/logout", |mut req, ctx| async move {
+            if let Some(resp) = check_key(&req, &ctx)? {
+                return Ok(resp);
+            }
+
+            let body = req.json().await?;
+
+            return_response(Ok(logout(body, &ctx).await.expect("Body required")))
         })
         .run(req, env)
         .await
