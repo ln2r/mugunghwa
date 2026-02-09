@@ -11,6 +11,7 @@ github_key = ""
 api_key = ""
 db_binding = ""
 bucket_binding = ""
+kv_binding = ""
 
 [[d1_databases]]
 binding = ""
@@ -20,3 +21,7 @@ database_id = ""
 [[r2_buckets]]
 bucket_name = ""
 binding = ""
+
+[[kv_namespaces]]
+binding = ""
+id = ""
