@@ -5,7 +5,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use sha2::Sha256;
 use worker::js_sys::Date;
-use worker::{Request, Response, Result, RouteContext};
+use worker::{Response, Result, RouteContext};
 
 static NON_WORD: Lazy<Regex> = Lazy::new(|| Regex::new(r"\W").unwrap());
 static CLEANUP: Lazy<Regex> = Lazy::new(|| Regex::new(r"-+").unwrap());
@@ -14,17 +14,6 @@ type HmacSha256 = Hmac<Sha256>;
 
 pub static STRIP_IMAGE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"!\[\w+\s\w+].+(\.png|jpeg|jpg|gif|webp)\)\s").unwrap());
-
-pub fn check_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
-    let request_key = req.headers().get("x-mugunghwa-key")?.unwrap_or_default();
-    let key = ctx.env.var("api_key")?.to_string();
-
-    if request_key != key {
-        return Ok(Some(Response::error("Unauthorized", 401)?));
-    }
-
-    Ok(None)
-}
 
 pub fn generate_slug(title: &str) -> String {
     let initial = NON_WORD.replace_all(title, "-");

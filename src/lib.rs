@@ -7,8 +7,8 @@ mod writings;
 
 use std::collections::HashMap;
 
-use crate::auth::{login, logout, register};
-use crate::commons::{check_key, return_response};
+use crate::auth::{login, logout, register, check_api_key};
+use crate::commons::{return_response};
 use crate::files::{get_file, get_files, upload_file, FileUpload};
 use crate::works::get_works;
 use crate::writings::{
@@ -41,7 +41,7 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 .expect("Slug required")))
         })
         .post_async("/writing", |mut req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
+            if let Some(resp) = check_api_key(&req, &ctx)? {
                 return Ok(resp);
             }
 
@@ -50,7 +50,7 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(Ok(add_writings(body, &ctx).await.expect("Body required")))
         })
         .patch_async("/writing", |mut req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
+            if let Some(resp) = check_api_key(&req, &ctx)? {
                 return Ok(resp);
             }
 
@@ -62,7 +62,7 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(Ok(Response::empty()?))
         })
         .post_async("/utils/upload", |mut req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
+            if let Some(resp) = check_api_key(&req, &ctx)? {
                 return Ok(resp);
             }
 
@@ -88,7 +88,7 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(get_files(&ctx, search).await)
         })
         .post_async("/auth/register", |mut req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
+            if let Some(resp) = check_api_key(&req, &ctx)? {
                 return Ok(resp);
             }
 
@@ -97,7 +97,7 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(Ok(register(body, &ctx).await.expect("Body required")))
         })
         .post_async("/auth/login", |mut req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
+            if let Some(resp) = check_api_key(&req, &ctx)? {
                 return Ok(resp);
             }
 
@@ -106,7 +106,7 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(Ok(login(body, &ctx).await.expect("Body required")))
         })
         .post_async("/auth/logout", |mut req, ctx| async move {
-            if let Some(resp) = check_key(&req, &ctx)? {
+            if let Some(resp) = check_api_key(&req, &ctx)? {
                 return Ok(resp);
             }
 

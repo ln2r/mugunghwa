@@ -6,7 +6,7 @@ use crate::{
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use serde::{Deserialize, Serialize};
-use worker::{wasm_bindgen::JsValue, Date, Response, RouteContext};
+use worker::{wasm_bindgen::JsValue, Date, Request, Response, Result, RouteContext};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct JwtBody {
@@ -117,7 +117,7 @@ pub async fn login(login: AuthUser, ctx: &RouteContext<()>) -> Result<Response, 
         .await?;
 
     let res = Auth {
-        token: sign(user.id),
+        token: sign(user.id, ctx.env.var("jwt_secret")?.to_string()),
         refresh: refesh_token,
     };
 
@@ -146,7 +146,18 @@ pub async fn logout(payload: Logout, ctx: &RouteContext<()>) -> Result<Response,
     Response::from_json(&user)
 }
 
-fn sign(user_id: String) -> String {
+pub fn check_api_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
+    let request_key = req.headers().get("x-mugunghwa-key")?.unwrap_or_default();
+    let key = ctx.env.var("api_key")?.to_string();
+
+    if request_key != key {
+        return Ok(Some(Response::error("Unauthorized", 401)?));
+    }
+
+    Ok(None)
+}
+
+fn sign(user_id: String, secret: String) -> String {
     let now = (Date::now().as_millis() / 1000) as u64;
     let header = r#"{"alg":"HS256","typ":"JWT"}"#;
     let payload = JwtBody {
@@ -160,7 +171,7 @@ fn sign(user_id: String) -> String {
 
     let sign_payload = format!("{}.{}", header_b64, payload_b64);
 
-    let signature = sign_hs256(b"USE_ENV_ON_LIVE_PLS", sign_payload.as_bytes());
+    let signature = sign_hs256(secret.as_bytes(), sign_payload.as_bytes());
 
     let jwt = format!("{}.{}.{}", header_b64, payload_b64, b64(&signature));
 
