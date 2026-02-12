@@ -12,6 +12,7 @@ api_key = ""
 db_binding = ""
 bucket_binding = ""
 kv_binding = ""
+jwt_secret = ""
 
 [[d1_databases]]
 binding = ""
