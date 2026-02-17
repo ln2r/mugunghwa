@@ -21,3 +21,4 @@ base64 = "0.22.1"
 argon2 = "0.5.3"
 getrandom = { version = "0.4.1", features = ["wasm_js"] }
 rand_core = "0.10.0"
+jwt-simple = "0.12.14"
