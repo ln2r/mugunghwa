@@ -5,8 +5,12 @@ use crate::{
     rng::GetRandomWrapper,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use jwt_simple::{
+    claims::Claims,
+    prelude::{Duration, HS256Key, MACLike},
+};
 use serde::{Deserialize, Serialize};
-use worker::{wasm_bindgen::JsValue, Date, Request, Response, Result, RouteContext};
+use worker::{console_log, wasm_bindgen::JsValue, Date, Request, Response, Result, RouteContext};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct JwtBody {
@@ -41,6 +45,11 @@ pub struct User {
     pub created: Option<String>,
     pub updated: Option<String>,
     pub deleted: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct JwtClaim {
+    user_id: String,
 }
 
 pub async fn register(user: AuthUser, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
@@ -79,6 +88,7 @@ pub async fn login(login: AuthUser, ctx: &RouteContext<()>) -> Result<Response, 
     let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
     let kv = ctx.env.kv(&ctx.env.var("kv_binding")?.to_string())?;
     let argon2 = Argon2::default();
+    let key = HS256Key::from_bytes(ctx.env.var("jwt_secret")?.to_string().as_bytes());
 
     let db = d1
         .prepare("SELECT * FROM users WHERE username = ? AND deleted is NULL;")
@@ -116,8 +126,13 @@ pub async fn login(login: AuthUser, ctx: &RouteContext<()>) -> Result<Response, 
         .execute()
         .await?;
 
+    let claim = Claims::with_custom_claims(JwtClaim { user_id: user.id }, Duration::from_hours(2));
+    let token = key
+        .authenticate(claim)
+        .map_err(|e| worker::Error::RustError(e.to_string()))?;
+
     let res = Auth {
-        token: sign(user.id, ctx.env.var("jwt_secret")?.to_string()),
+        token: token,
         refresh: refesh_token,
     };
 
