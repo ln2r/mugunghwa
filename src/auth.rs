@@ -6,7 +6,8 @@ use crate::{
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use jwt_simple::{
-    claims::Claims,
+    claims::{Claims, JWTClaims},
+    common::VerificationOptions,
     prelude::{Duration, HS256Key, MACLike},
 };
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,6 @@ pub struct AuthUser {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Logout {
-    user_id: String,
     refresh: String,
 }
 
@@ -48,8 +48,8 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct JwtClaim {
-    user_id: String,
+pub struct JwtClaim {
+    pub user_id: String,
 }
 
 pub async fn register(user: AuthUser, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
@@ -139,13 +139,17 @@ pub async fn login(login: AuthUser, ctx: &RouteContext<()>) -> Result<Response, 
     Response::from_json(&res)
 }
 
-pub async fn logout(payload: Logout, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
+pub async fn logout(
+    auth_user: JwtClaim,
+    payload: Logout,
+    ctx: &RouteContext<()>,
+) -> Result<Response, worker::Error> {
     let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
     let kv = ctx.env.kv(&ctx.env.var("kv_binding")?.to_string())?;
 
     let db = d1
         .prepare("SELECT * FROM users WHERE id = ? AND deleted is NULL;")
-        .bind(&[JsValue::from(&payload.user_id.to_string())])?
+        .bind(&[JsValue::from(&auth_user.user_id.to_string())])?
         .first::<User>(None)
         .await?;
 
@@ -170,6 +174,46 @@ pub fn check_api_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Res
     }
 
     Ok(None)
+}
+
+pub fn check_auth_token(
+    req: &Request,
+    ctx: &RouteContext<()>,
+) -> Result<JWTClaims<JwtClaim>, Response> {
+    let secret = ctx
+        .env
+        .var("jwt_secret")
+        .map_err(|_| Response::error("Server error", 500).unwrap())?
+        .to_string();
+
+    let key = HS256Key::from_bytes(secret.as_bytes());
+
+    // getting the token
+    let auth_header = req
+        .headers()
+        .get("Authorization")
+        .map_err(|_| Response::error("Unauthorized", 401).unwrap())?
+        .ok_or_else(|| Response::error("Unauthorized", 401).unwrap())?;
+
+    // checking format
+    if !auth_header.starts_with("Bearer ") {
+        return Err(Response::error("Unauthorized", 401).unwrap());
+    }
+
+    // getting only the token part, skipping "Bearer"
+    let token = &auth_header[7..];
+
+    // validating
+    let mut options = VerificationOptions::default();
+    options.accept_future = true;
+    options.time_tolerance = Some(Duration::from_mins(15));
+    options.max_validity = Some(Duration::from_hours(2));
+
+    let claims = key
+        .verify_token::<JwtClaim>(&token, Some(options))
+        .map_err(|_| Response::error("Unauthorized", 401).unwrap())?;
+
+    Ok(claims)
 }
 
 fn sign(user_id: String, secret: String) -> String {
