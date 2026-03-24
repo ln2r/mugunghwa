@@ -167,7 +167,7 @@ pub async fn logout(
 
     kv.delete(&payload.refresh).await?;
 
-    Response::from_json(&user)
+    Response::from_json(&auth_user)
 }
 
 pub fn check_api_key(req: &Request, ctx: &RouteContext<()>) -> Result<Option<Response>> {
