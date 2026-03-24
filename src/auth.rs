@@ -1,9 +1,4 @@
-use std::ops::Add;
-
-use crate::{
-    commons::{b64, generate_snowflake, sign_hs256},
-    rng::GetRandomWrapper,
-};
+use crate::{commons::generate_snowflake, rng::GetRandomWrapper};
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use jwt_simple::{
     claims::{Claims, JWTClaims},
@@ -11,14 +6,7 @@ use jwt_simple::{
     prelude::{Duration, HS256Key, MACLike},
 };
 use serde::{Deserialize, Serialize};
-use worker::{console_log, wasm_bindgen::JsValue, Date, Request, Response, Result, RouteContext};
-
-#[derive(Serialize, Deserialize, Debug)]
-struct JwtBody {
-    sub: String,
-    iat: u64,
-    exp: u64,
-}
+use worker::{wasm_bindgen::JsValue, Request, Response, Result, RouteContext};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Auth {
@@ -158,7 +146,7 @@ pub async fn logout(
         .first::<User>(None)
         .await?;
 
-    let user = match db {
+    let _user = match db {
         Some(user) => user,
         None => {
             return Ok(Response::error("User not found", 404)?);
@@ -257,25 +245,4 @@ pub async fn refresh_token(
     };
 
     Response::from_json(&res)
-}
-
-fn sign(user_id: String, secret: String) -> String {
-    let now = (Date::now().as_millis() / 1000) as u64;
-    let header = r#"{"alg":"HS256","typ":"JWT"}"#;
-    let payload = JwtBody {
-        sub: user_id.into(),
-        iat: now,
-        exp: now.add(900),
-    };
-
-    let header_b64 = b64(header.as_bytes());
-    let payload_b64 = b64(&serde_json::to_vec(&payload).unwrap());
-
-    let sign_payload = format!("{}.{}", header_b64, payload_b64);
-
-    let signature = sign_hs256(secret.as_bytes(), sign_payload.as_bytes());
-
-    let jwt = format!("{}.{}.{}", header_b64, payload_b64, b64(&signature));
-
-    jwt
 }
