@@ -52,6 +52,11 @@ pub struct JwtClaim {
     pub user_id: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RefreshPayload {
+    pub token: String,
+}
+
 pub async fn register(user: AuthUser, ctx: &RouteContext<()>) -> Result<Response, worker::Error> {
     let d1 = ctx.env.d1(&ctx.env.var("db_binding")?.to_string())?;
     let id = generate_snowflake(ctx);
@@ -121,7 +126,7 @@ pub async fn login(login: AuthUser, ctx: &RouteContext<()>) -> Result<Response, 
     // refresh token
     let refesh_token = generate_snowflake(ctx).to_string();
 
-    kv.put(&refesh_token, &refesh_token)?
+    kv.put(&refesh_token, &user.id)?
         .expiration_ttl(1800)
         .execute()
         .await?;
@@ -214,6 +219,44 @@ pub fn check_auth_token(
         .map_err(|_| Response::error("Unauthorized", 401).unwrap())?;
 
     Ok(claims)
+}
+
+pub async fn refresh_token(
+    body: RefreshPayload,
+    ctx: &RouteContext<()>,
+) -> Result<Response, worker::Error> {
+    let kv = ctx.env.kv(&ctx.env.var("kv_binding")?.to_string())?;
+    let key = HS256Key::from_bytes(ctx.env.var("jwt_secret")?.to_string().as_bytes());
+
+    // getting existing token
+    let existing_token = kv.get(&body.token).text().await?;
+
+    let user_id = match existing_token {
+        Some(id) => id,
+        None => {
+            return Ok(Response::error("Token Expired", 401)?);
+        }
+    };
+
+    // new refresh token
+    let refesh_token = generate_snowflake(ctx).to_string();
+
+    kv.put(&refesh_token, &user_id)?
+        .expiration_ttl(1800)
+        .execute()
+        .await?;
+
+    let claim = Claims::with_custom_claims(JwtClaim { user_id: user_id }, Duration::from_hours(2));
+    let token = key
+        .authenticate(claim)
+        .map_err(|e| worker::Error::RustError(e.to_string()))?;
+
+    let res = Auth {
+        token: token,
+        refresh: refesh_token,
+    };
+
+    Response::from_json(&res)
 }
 
 fn sign(user_id: String, secret: String) -> String {

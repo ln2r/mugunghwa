@@ -7,7 +7,7 @@ mod writings;
 
 use std::collections::HashMap;
 
-use crate::auth::{check_api_key, check_auth_token, login, logout, register};
+use crate::auth::{check_api_key, check_auth_token, login, logout, refresh_token, register};
 use crate::commons::return_response;
 use crate::files::{get_file, get_files, upload_file, FileUpload};
 use crate::works::get_works;
@@ -112,6 +112,11 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             return_response(Ok(logout(auth_user.custom, body, &ctx)
                 .await
                 .expect("Body required")))
+        })
+        .post_async("/auth/refresh", |mut req, ctx| async move {
+            let body = req.json().await?;
+
+            return_response(Ok(refresh_token(body, &ctx).await.expect("Body required")))
         })
         .run(req, env)
         .await
