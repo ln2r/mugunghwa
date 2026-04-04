@@ -1,5 +1,33 @@
 {
-  "devDependencies": {
-    "wrangler": "^4.77.0"
-  }
+    "name": "mugunghwa",
+    "version": "1.0.0",
+    "description": "the backend for ln2r.work",
+    "keywords": [
+        "cloudflare-worker",
+        "elysiajs"
+    ],
+    "homepage": "https://github.com/ln2r/mugunghwa#readme",
+    "bugs": {
+        "url": "https://github.com/ln2r/mugunghwa/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ln2r/mugunghwa.git"
+    },
+    "license": "MIT",
+    "author": "ln2r",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc src/index.ts --outDir dist",
+        "start": "NODE_ENV=production node dist/index.js"
+    },
+    "dependencies": {
+        "@elysiajs/node": "^1.4.5",
+        "elysia": "^1.4.28"
+    },
+    "devDependencies": {
+        "@types/node": "^25.5.2",
+        "tsx": "^4.21.0",
+        "typescript": "^6.0.2"
+    }
 }
