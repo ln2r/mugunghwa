@@ -1,8 +1,11 @@
 import { Elysia } from "elysia";
 import { node } from "@elysiajs/node";
+import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
+import { works } from "./works/index.js";
 
-const app = new Elysia({ adapter: node() })
-    .get("/", () => "Hello Elysia")
-    .listen(3000, ({ hostname, port }) => {
-        console.log(`🦊 Elysia is running at ${hostname}:${port}`);
-    });
+export default new Elysia({
+    adapter: CloudflareAdapter,
+})
+    .use(works)
+    .get("/", () => "Hello Cloudflare Worker!")
+    .compile();
