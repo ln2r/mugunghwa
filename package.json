@@ -16,10 +16,12 @@
     },
     "license": "MIT",
     "author": "ln2r",
+    "type": "module",
     "scripts": {
-        "dev": "tsx watch src/index.ts",
-        "build": "tsc src/index.ts --outDir dist",
-        "start": "NODE_ENV=production node dist/index.js"
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev",
+        "start": "wrangler dev",
+        "cf-typegen": "wrangler types"
     },
     "dependencies": {
         "@elysiajs/node": "^1.4.5",
@@ -28,6 +30,7 @@
     "devDependencies": {
         "@types/node": "^25.5.2",
         "tsx": "^4.21.0",
-        "typescript": "^6.0.2"
+        "typescript": "^6.0.2",
+        "wrangler": "^4.80.0"
     }
 }
