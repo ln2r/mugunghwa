@@ -1,1 +1,5 @@
 node_modules
+
+# cloudflare stuff
+wrangler.jsonc
+.wrangler
