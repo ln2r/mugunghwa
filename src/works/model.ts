@@ -1,10 +1,10 @@
 export interface Works {
-    id: string;
+    id?: string;
     title: string;
     description: string;
     url?: string;
     stacks?: string;
-    created: string;
-    updated: string;
+    created?: string;
+    updated?: string;
     deleted?: string;
 }

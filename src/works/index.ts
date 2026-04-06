@@ -3,6 +3,22 @@ import { WorkService } from "./service.js";
 
 const workService = new WorkService();
 
-export const works = new Elysia({ prefix: "/works" }).get("/", () =>
-    workService.getWorks(),
-);
+export const works = new Elysia({ prefix: "/works" })
+    .get("/:id", async ({ status, params: { id } }) => {
+        const work = await workService.getWork(id);
+        if (work.length === 0) {
+            throw status(404, "Work not found");
+        }
+
+        return work[0];
+    })
+    .get("/", () => workService.getWorks())
+    .post("/", async (status, { body }) => {
+        const res = await workService.add(body);
+
+        if (!res.success) {
+            throw status(500);
+        }
+
+        return "Created";
+    });
