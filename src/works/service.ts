@@ -83,4 +83,22 @@ export class WorkService {
 
         return res.results[0];
     }
+
+    async delete(id: string) {
+        const exist: D1Return = await this.db
+            .prepare("SELECT id FROM works WHERE id = ? AND deleted is NULL;")
+            .bind(id)
+            .run<Works>();
+
+        if (exist.results.length === 0) {
+            return;
+        }
+
+        const res: D1Return = await this.db
+            .prepare("UPDATE works SET deleted = ? WHERE id = ?;")
+            .bind(new Date().toISOString(), id)
+            .run();
+
+        return res.success;
+    }
 }

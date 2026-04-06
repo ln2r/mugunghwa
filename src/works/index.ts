@@ -14,7 +14,7 @@ export const works = new Elysia({ prefix: "/works" })
     })
     .get("/", () => workService.getWorks())
     .post("/", async ({ body }) => {
-        return await workService.add(body);
+        return workService.add(body);
     })
     .patch("/:id", async ({ status, body, params: { id } }) => {
         const res = await workService.update(id, body);
@@ -24,4 +24,13 @@ export const works = new Elysia({ prefix: "/works" })
         }
 
         return res;
+    })
+    .delete("/:id", async ({ status, params: { id } }) => {
+        const res = await workService.delete(id);
+
+        if (!res) {
+            throw status(404, "Work not found");
+        }
+
+        return "Deleted";
     });
