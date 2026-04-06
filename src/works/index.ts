@@ -13,12 +13,15 @@ export const works = new Elysia({ prefix: "/works" })
         return work[0];
     })
     .get("/", () => workService.getWorks())
-    .post("/", async (status, { body }) => {
-        const res = await workService.add(body);
+    .post("/", async ({ body }) => {
+        return await workService.add(body);
+    })
+    .patch("/:id", async ({ status, body, params: { id } }) => {
+        const res = await workService.update(id, body);
 
-        if (!res.success) {
-            throw status(500);
+        if (!res) {
+            throw status(404, "Work not found");
         }
 
-        return "Created";
+        return res;
     });
