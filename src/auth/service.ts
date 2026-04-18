@@ -109,4 +109,46 @@ export class AuthService {
             refreshToken: sessionToken,
         };
     }
+
+    async refreshToken(jwt, body) {
+        const tokenBody = await this.kv.get(`session:${body.refreshToken}`);
+
+        if (!tokenBody) {
+            return;
+        }
+
+        const parsedToken = JSON.parse(tokenBody);
+        const db: D1Return = await this.db
+            .prepare(
+                `
+              SELECT *
+              FROM users
+              WHERE provider_id = ?;`,
+            )
+            .bind(String(parsedToken.provider_id))
+            .run<Users>();
+
+        const user = db.results[0];
+
+        await this.kv.delete(`session:${body.refreshToken}`);
+        const sessionToken = Snowflake.generate();
+        await this.kv.put(
+            `session:${sessionToken}`,
+            JSON.stringify({
+                id: user.id,
+                provider_id: user.provider_id,
+            }),
+            {
+                expirationTtl: 60 * 60 * 24 * 7, // 7 days
+            },
+        );
+
+        return {
+            accessToken: await jwt.sign({
+                id: user.id,
+                provider_id: user.provider_id,
+            }),
+            refreshToken: sessionToken,
+        };
+    }
 }

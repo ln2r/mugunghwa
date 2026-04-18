@@ -39,9 +39,22 @@ export const auth = new Elysia({ prefix: "/auth" })
         const res = await authService.handleCallback(jwt, query.code);
 
         if (!res) {
-            set.status = 400;
+            set.status = 401;
             return {
                 error: "Invalid user",
+                time: new Date().toISOString(),
+            };
+        }
+
+        return res;
+    })
+    .post("/refresh-token", async ({ jwt, body, set }) => {
+        const res = await authService.refreshToken(jwt, body);
+
+        if (!res) {
+            set.status = 401;
+            return {
+                error: "Token expired",
                 time: new Date().toISOString(),
             };
         }
