@@ -130,6 +130,10 @@ export class AuthService {
 
         const user = db.results[0];
 
+        if (!user) {
+            return;
+        }
+
         await this.kv.delete(`session:${body.refreshToken}`);
         const sessionToken = Snowflake.generate();
         await this.kv.put(
