@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import type { Users } from "./model.ts";
 import { Snowflake } from "@theinternetfolks/snowflake";
 import type { D1Return } from "../commons/db-returns.ts";
+import type { Context } from "elysia";
 
 export class AuthService {
     private db;
@@ -154,5 +155,28 @@ export class AuthService {
             }),
             refreshToken: sessionToken,
         };
+    }
+
+    async validateSession(
+        bearer: string | undefined,
+        set: Context["set"],
+        status: Context["status"],
+        jwt: any,
+    ) {
+        if (!bearer) {
+            set.headers["WWW-Authenticate"] =
+                `Bearer realm='sign', error="invalid_request"`;
+
+            return status(400, "Unauthorized");
+        }
+
+        const user = await jwt.verify(bearer);
+
+        if (!user) {
+            set.headers["WWW-Authenticate"] =
+                `Bearer realm='sign', error="invalid_request"`;
+
+            return status(401, "Token expired");
+        }
     }
 }
