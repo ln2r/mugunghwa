@@ -24,6 +24,7 @@
         "cf-typegen": "wrangler types"
     },
     "dependencies": {
+        "@elysia/cors": "^1.4.2",
         "@elysiajs/bearer": "^1.4.3",
         "@elysiajs/jwt": "^1.4.1",
         "@elysiajs/node": "^1.4.5",
