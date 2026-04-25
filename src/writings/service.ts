@@ -18,13 +18,13 @@ export class WritingService {
         return res.results;
     }
 
-    async getWriting(id: string) {
+    async getWriting(query: string) {
         const res: D1Return = await this.db
-            .prepare("SELECT * FROM writings WHERE id = ? AND deleted is NULL;")
-            .bind(id)
+            .prepare(
+                "SELECT * FROM writings WHERE id = ? OR slug = ? AND deleted is NULL;",
+            )
+            .bind(query, query)
             .run<Writings>();
-
-        console.log(res);
 
         return res.results[0];
     }

@@ -26,8 +26,8 @@ export const writings = new Elysia({ prefix: "/writings" })
             time: new Date().toISOString(),
         };
     })
-    .get("/:id", async ({ status, params: { id } }) => {
-        const writing = await writingService.getWriting(id);
+    .get("/:query", async ({ status, params: { query } }) => {
+        const writing = await writingService.getWriting(query);
 
         if (!writing) {
             throw status(404, "Writing not found");
