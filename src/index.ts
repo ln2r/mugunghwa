@@ -5,6 +5,7 @@ import { works } from "./works/index.js";
 import { auth } from "./auth/index.js";
 import { writings } from "./writings/index.js";
 import { cors } from "@elysia/cors";
+import { files } from "./files/index.js";
 
 export default new Elysia({
     adapter: CloudflareAdapter,
@@ -13,5 +14,6 @@ export default new Elysia({
     .use(auth)
     .use(works)
     .use(writings)
+    .use(files)
     .get("/", () => "Hello Cloudflare Worker!")
     .compile();
