@@ -45,7 +45,7 @@ export class AuthService {
         const userFetch = await fetch("https://api.github.com/user", {
             headers: {
                 Authorization: `Bearer ${access_token}`,
-                "User-Agent": "mugunghwa",
+                "User-Agent": "mugunghwa-cfw",
             },
         });
 
