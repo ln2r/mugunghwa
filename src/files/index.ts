@@ -58,6 +58,9 @@ export const files = new Elysia({ prefix: "/files" })
             query: t.Object({
                 query: t.Optional(t.String()),
             }),
+            beforeHandle: async ({ bearer, set, status, jwt }) => {
+                return authService.validateSession(bearer, set, status, jwt);
+            },
         },
     )
     .post(
