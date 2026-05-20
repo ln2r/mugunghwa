@@ -3,13 +3,13 @@ import { WorkService } from "./service.js";
 import { bearer } from "@elysiajs/bearer";
 import { jwt } from "@elysiajs/jwt";
 import { env } from "cloudflare:workers";
-import { AuthService } from "../auth/service.js";
+import { auth } from "../auth/index.js";
 
 const workService = new WorkService();
-const authService = new AuthService();
 
 export const works = new Elysia({ prefix: "/works" })
     .use(bearer())
+    .use(auth)
     .use(
         jwt({
             name: "jwt",
@@ -41,9 +41,7 @@ export const works = new Elysia({ prefix: "/works" })
             return workService.add(body);
         },
         {
-            async beforeHandle({ bearer, set, status, jwt }) {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
+            isSignedIn: true,
         },
     )
     .patch(
@@ -58,9 +56,7 @@ export const works = new Elysia({ prefix: "/works" })
             return res;
         },
         {
-            async beforeHandle({ bearer, set, status, jwt }) {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
+            isSignedIn: true,
         },
     )
     .delete(
@@ -75,8 +71,6 @@ export const works = new Elysia({ prefix: "/works" })
             return "Deleted";
         },
         {
-            async beforeHandle({ bearer, set, status, jwt }) {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
+            isSignedIn: true,
         },
     );

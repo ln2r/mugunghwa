@@ -3,13 +3,13 @@ import { bearer } from "@elysiajs/bearer";
 import { jwt } from "@elysiajs/jwt";
 import { env } from "cloudflare:workers";
 import { FileService } from "./service.js";
-import { AuthService } from "../auth/service.js";
+import { auth } from "../auth/index.js";
 
 const fileService = new FileService();
-const authService = new AuthService();
 
 export const files = new Elysia({ prefix: "/files" })
     .use(bearer())
+    .use(auth)
     .use(
         jwt({
             name: "jwt",
@@ -55,12 +55,10 @@ export const files = new Elysia({ prefix: "/files" })
             return await fileService.files(query.query);
         },
         {
+            isSignedIn: true,
             query: t.Object({
                 query: t.Optional(t.String()),
             }),
-            beforeHandle: async ({ bearer, set, status, jwt }) => {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
         },
     )
     .post(
@@ -69,11 +67,9 @@ export const files = new Elysia({ prefix: "/files" })
             return await fileService.upload(body);
         },
         {
+            isSignedIn: true,
             body: t.Object({
                 file: t.File(),
             }),
-            beforeHandle: async ({ bearer, set, status, jwt }) => {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
         },
     );

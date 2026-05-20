@@ -6,12 +6,13 @@ import { AuthService } from "./service.ts";
 const authService = new AuthService();
 
 export const auth = new Elysia({ prefix: "/auth" })
-    .onError(({ error, set }) => {
+    .onError(({ code, error, set }) => {
         console.error(error);
         set.status = 500;
         return {
-            error: error.message,
+            message: error.message,
             time: new Date().toISOString(),
+            data: null,
         };
     })
     .use(
@@ -22,6 +23,30 @@ export const auth = new Elysia({ prefix: "/auth" })
             exp: "2h",
         }),
     )
+    .macro({
+        isSignedIn: {
+            async resolve({ bearer, status, jwt, set }) {
+                if (!bearer) {
+                    set.headers["WWW-Authenticate"] =
+                        `Bearer realm='sign', error="invalid_request"`;
+
+                    return status(400, { message: "Unauthorized", data: null });
+                }
+
+                const user = await jwt.verify(bearer);
+
+                if (!user) {
+                    set.headers["WWW-Authenticate"] =
+                        `Bearer realm='sign', error="invalid_request"`;
+
+                    return status(401, {
+                        message: "Token expired",
+                        data: null,
+                    });
+                }
+            },
+        },
+    })
     .get("/login", async ({ res }) => {
         const url = authService.githubAuth();
 

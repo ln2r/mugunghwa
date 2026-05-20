@@ -1,23 +1,13 @@
 import Elysia from "elysia";
 import { bearer } from "@elysiajs/bearer";
-import { jwt } from "@elysiajs/jwt";
-import { env } from "cloudflare:workers";
-import { AuthService } from "../auth/service.js";
 import { WritingService } from "./service.js";
+import { auth } from "../auth/index.js";
 
 const writingService = new WritingService();
-const authService = new AuthService();
 
 export const writings = new Elysia({ prefix: "/writings" })
     .use(bearer())
-    .use(
-        jwt({
-            name: "jwt",
-            secret: env.JWT_SECRET,
-            iss: "mugunghwa-cfw",
-            exp: "2h",
-        }),
-    )
+    .use(auth)
     .onError(({ error, set }) => {
         console.error(error);
         set.status = 500;
@@ -42,9 +32,7 @@ export const writings = new Elysia({ prefix: "/writings" })
             return writingService.add(body);
         },
         {
-            async beforeHandle({ bearer, set, status, jwt }) {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
+            isSignedIn: true,
         },
     )
     .patch(
@@ -59,9 +47,7 @@ export const writings = new Elysia({ prefix: "/writings" })
             return res;
         },
         {
-            async beforeHandle({ bearer, set, status, jwt }) {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
+            isSignedIn: true,
         },
     )
     .delete(
@@ -76,8 +62,6 @@ export const writings = new Elysia({ prefix: "/writings" })
             return res;
         },
         {
-            async beforeHandle({ bearer, set, status, jwt }) {
-                return authService.validateSession(bearer, set, status, jwt);
-            },
+            isSignedIn: true,
         },
     );
