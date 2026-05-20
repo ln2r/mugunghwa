@@ -32,6 +32,7 @@
         "elysia": "^1.4.28"
     },
     "devDependencies": {
+        "@cloudflare/workers-types": "^4.20260520.1",
         "@types/node": "^25.5.2",
         "tsx": "^4.21.0",
         "typescript": "^6.0.2",
