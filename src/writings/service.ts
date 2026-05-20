@@ -82,7 +82,7 @@ export class WritingService {
                   id = ?;
             `,
             )
-            .bind(id, body.title, slug, body.hero, body.body, now, id)
+            .bind(body.title, slug, body.hero, body.body, now, id)
             .run();
 
         const res: D1Return = await this.db
