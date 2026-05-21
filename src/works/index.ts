@@ -1,8 +1,6 @@
 import Elysia from "elysia";
 import { WorkService } from "./service.js";
 import { bearer } from "@elysiajs/bearer";
-import { jwt } from "@elysiajs/jwt";
-import { env } from "cloudflare:workers";
 import { auth } from "../auth/index.js";
 
 const workService = new WorkService();
@@ -10,22 +8,6 @@ const workService = new WorkService();
 export const works = new Elysia({ prefix: "/works" })
     .use(bearer())
     .use(auth)
-    .use(
-        jwt({
-            name: "jwt",
-            secret: env.JWT_SECRET,
-            iss: "mugunghwa-cfw",
-            exp: "2h",
-        }),
-    )
-    .onError(({ error, set }) => {
-        console.error(error);
-        set.status = 500;
-        return {
-            error: error.message,
-            time: new Date().toISOString(),
-        };
-    })
     .get("/:id", async ({ status, params: { id } }) => {
         const work = await workService.getWork(id);
         if (work.length === 0) {

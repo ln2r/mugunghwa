@@ -6,15 +6,6 @@ import { AuthService } from "./service.ts";
 const authService = new AuthService();
 
 export const auth = new Elysia({ prefix: "/auth" })
-    .onError(({ code, error, set }) => {
-        console.error(error);
-        set.status = 500;
-        return {
-            message: error.message,
-            time: new Date().toISOString(),
-            data: null,
-        };
-    })
     .use(
         jwt({
             name: "jwt",
@@ -30,7 +21,12 @@ export const auth = new Elysia({ prefix: "/auth" })
                     set.headers["WWW-Authenticate"] =
                         `Bearer realm='sign', error="invalid_request"`;
 
-                    return status(400, { message: "Unauthorized", data: null });
+                    return status(400, {
+                        statusCode: 401,
+                        time: new Date().toISOString(),
+                        message: "Unauthorized",
+                        data: null,
+                    });
                 }
 
                 const user = await jwt.verify(bearer);
@@ -40,6 +36,8 @@ export const auth = new Elysia({ prefix: "/auth" })
                         `Bearer realm='sign', error="invalid_request"`;
 
                     return status(401, {
+                        statusCode: 401,
+                        time: new Date().toISOString(),
                         message: "Token expired",
                         data: null,
                     });
@@ -54,21 +52,13 @@ export const auth = new Elysia({ prefix: "/auth" })
     })
     .get("/oauth/callback", async ({ jwt, query, set }) => {
         if (!query.code) {
-            set.status = 400;
-            return {
-                error: "Missing code",
-                time: new Date().toISOString(),
-            };
+            throw new Error("Missing code");
         }
 
         const res = await authService.handleCallback(jwt, query.code);
 
         if (!res) {
-            set.status = 401;
-            return {
-                error: "Invalid user",
-                time: new Date().toISOString(),
-            };
+            throw new Error("Invalid user");
         }
 
         return res;

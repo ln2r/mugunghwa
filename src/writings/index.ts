@@ -8,14 +8,6 @@ const writingService = new WritingService();
 export const writings = new Elysia({ prefix: "/writings" })
     .use(bearer())
     .use(auth)
-    .onError(({ error, set }) => {
-        console.error(error);
-        set.status = 500;
-        return {
-            error: error.message,
-            time: new Date().toISOString(),
-        };
-    })
     .get("/:query", async ({ status, params: { query } }) => {
         const writing = await writingService.getWriting(query);
 

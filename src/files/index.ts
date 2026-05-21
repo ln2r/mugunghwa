@@ -1,7 +1,5 @@
 import Elysia, { t } from "elysia";
 import { bearer } from "@elysiajs/bearer";
-import { jwt } from "@elysiajs/jwt";
-import { env } from "cloudflare:workers";
 import { FileService } from "./service.js";
 import { auth } from "../auth/index.js";
 
@@ -10,22 +8,6 @@ const fileService = new FileService();
 export const files = new Elysia({ prefix: "/files" })
     .use(bearer())
     .use(auth)
-    .use(
-        jwt({
-            name: "jwt",
-            secret: env.JWT_SECRET,
-            iss: "mugunghwa-cfw",
-            exp: "2h",
-        }),
-    )
-    .onError(({ error, set }) => {
-        console.error(error);
-        set.status = 500;
-        return {
-            error: error.message,
-            time: new Date().toISOString(),
-        };
-    })
     .decorate("fileService", fileService)
     .get(
         "/:key",
