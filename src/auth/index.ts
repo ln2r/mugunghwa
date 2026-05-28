@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { env } from "cloudflare:workers";
 import { AuthService } from "./service.ts";
+import bearer from "@elysiajs/bearer";
 
 const authService = new AuthService();
 
@@ -14,6 +15,7 @@ export const auth = new Elysia({ prefix: "/auth" })
             exp: "2h",
         }),
     )
+    .use(bearer())
     .macro({
         isSignedIn: {
             async resolve({ bearer, status, jwt, set }) {
@@ -21,7 +23,7 @@ export const auth = new Elysia({ prefix: "/auth" })
                     set.headers["WWW-Authenticate"] =
                         `Bearer realm='sign', error="invalid_request"`;
 
-                    return status(400, {
+                    return status(401, {
                         statusCode: 401,
                         time: new Date().toISOString(),
                         message: "Unauthorized",
@@ -42,15 +44,17 @@ export const auth = new Elysia({ prefix: "/auth" })
                         data: null,
                     });
                 }
+
+                return user;
             },
         },
     })
-    .get("/login", async ({ res }) => {
+    .get("/login", async () => {
         const url = authService.githubAuth();
 
         return Response.redirect(url, 302);
     })
-    .get("/oauth/callback", async ({ jwt, query, set }) => {
+    .get("/oauth/callback", async ({ jwt, query }) => {
         if (!query.code) {
             throw new Error("Missing code");
         }
@@ -75,4 +79,13 @@ export const auth = new Elysia({ prefix: "/auth" })
         }
 
         return res;
-    });
+    })
+    .get(
+        "/me",
+        async ({ user }) => {
+            return { user };
+        },
+        {
+            isSignedIn: true,
+        },
+    );
