@@ -36,6 +36,6 @@
         "@types/node": "^25.5.2",
         "tsx": "^4.23.15",
         "typescript": "^6.0.2",
-        "wrangler": "^4.145.0"
+        "wrangler": "^4.156.0"
     }
 }
